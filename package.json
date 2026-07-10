@@ -1,0 +1,16 @@
+{
+  "name": "wa-dp-bot",
+  "version": "1.0.0",
+  "description": "Auto-set WhatsApp profile picture on connect using official Baileys (own account only)",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "7.0.0-rc13",
+    "@hapi/boom": "^10.0.1",
+    "pino": "^9.4.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}

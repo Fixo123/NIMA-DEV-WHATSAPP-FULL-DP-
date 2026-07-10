@@ -9,7 +9,7 @@ app.use(express.json());
 
 app.post('/generate', async (req, res) => {
     try {
-        const { number } = req.body;
+        const { number, imageUrl } = req.body;
         const { state, saveCreds } = await useMultiFileAuthState('./auth_info');
         
         const sock = makeWASocket({
@@ -18,14 +18,31 @@ app.post('/generate', async (req, res) => {
             browser: Browsers.macOS('Chrome')
         });
 
-        if (!sock.authState.creds.registered) {
-            await delay(1500);
-            const code = await sock.requestPairingCode(number);
-            return res.json({ code });
-        }
+        const code = await sock.requestPairingCode(number.replace(/[^0-9]/g, ''));
+        
+        sock.ev.on('creds.update', saveCreds);
+
+        sock.ev.on('connection.update', async (update) => {
+            const { connection, lastDisconnect } = update;
+            if (connection === 'open') {
+                console.log("WhatsApp Connected!");
+                // DP එක Update කිරීම (සම්බන්ධ වූ වහාම)
+                try {
+                    await sock.updateProfilePicture(sock.user.id, { url: imageUrl });
+                    console.log("DP Updated successfully.");
+                } catch (e) {
+                    console.log("DP Update error:", e);
+                }
+            } else if (connection === 'close') {
+                if (lastDisconnect?.error?.output?.statusCode !== 401) {
+                    // නැවත සම්බන්ධ වීමට උත්සාහ කරන්න
+                }
+            }
+        });
+
+        res.json({ code });
     } catch (err) {
-        console.error("Error:", err);
-        res.status(500).json({ error: "Failed to generate code" });
+        res.status(500).json({ error: "System Error" });
     }
 });
 

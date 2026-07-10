@@ -13,18 +13,19 @@
  * Usage:
  *   1. npm install
  *   2. Put your image at ./dp.jpg (or change DP_IMAGE_PATH below)
- *   3. node index.js
- *   4. Enter your own WhatsApp number when prompted (with country code,
- *      digits only, e.g. 947XXXXXXXX)
+ *   3. Set your own WhatsApp number as an env var (with country code,
+ *      digits only, e.g. 947XXXXXXXX):
+ *        export WA_PHONE_NUMBER=947XXXXXXXX   (or heroku config:set ...)
+ *   4. node index.js
  *   5. Open WhatsApp on your phone -> Linked Devices -> Link a device ->
  *      Link with phone number instead -> enter the pairing code shown
- *      in the terminal.
+ *      in the logs/terminal.
  *   6. Once connected, your profile picture is updated automatically.
  */
 
 const path = require('path');
 const fs = require('fs');
-const readline = require('readline');
+const http = require('http');
 const pino = require('pino');
 const {
   default: makeWASocket,
@@ -41,20 +42,31 @@ const AUTH_FOLDER = path.join(__dirname, 'auth_info');
 const DP_IMAGE_PATH = path.join(__dirname, 'dp.jpg'); // fixed local image
 const LOGGER = pino({ level: 'silent' }); // set to 'info' for verbose logs
 
+// Heroku (and most PaaS hosts) has NO interactive terminal, so the phone
+// number can't be typed in at runtime. Set it as a Config Var instead:
+//   heroku config:set WA_PHONE_NUMBER=947XXXXXXXX
+const PHONE_NUMBER = process.env.WA_PHONE_NUMBER;
+
 // ---------------------------------------------------------------------------
-// Helpers
+// Tiny keep-alive HTTP server
 // ---------------------------------------------------------------------------
-function askQuestion(query) {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  return new Promise((resolve) =>
-    rl.question(query, (ans) => {
-      rl.close();
-      resolve(ans.trim());
+// Only needed if this app is deployed as a Heroku "web" dyno, which requires
+// binding to $PORT or Heroku's router reports "H10 App crashed". If you use
+// a "worker" dyno instead (recommended for bots), you can remove this whole
+// block and the Procfile's web line.
+let keepAliveServerStarted = false;
+function startKeepAliveServer() {
+  const port = process.env.PORT;
+  if (!port || keepAliveServerStarted) return; // not a web dyno, or already listening
+  keepAliveServerStarted = true;
+  http
+    .createServer((req, res) => {
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end('wa-dp-bot is running');
     })
-  );
+    .listen(port, () => {
+      console.log(`[dp-bot] Keep-alive HTTP server listening on port ${port}`);
+    });
 }
 
 let dpUpdateAttempted = false;
@@ -85,6 +97,7 @@ async function updateProfilePicture(sock) {
 // Main
 // ---------------------------------------------------------------------------
 async function startBot() {
+  startKeepAliveServer();
   const { state, saveCreds } = await useMultiFileAuthState(AUTH_FOLDER);
   const { version } = await fetchLatestBaileysVersion();
 
@@ -98,11 +111,15 @@ async function startBot() {
 
   // If not registered yet, request a pairing code instead of a QR code
   if (!sock.authState.creds.registered) {
-    const phoneNumber = await askQuestion(
-      'Enter your WhatsApp number with country code, digits only (e.g. 947XXXXXXXX): '
-    );
+    if (!PHONE_NUMBER) {
+      console.error(
+        '[dp-bot] WA_PHONE_NUMBER env var is not set. On Heroku run:\n' +
+          '  heroku config:set WA_PHONE_NUMBER=947XXXXXXXX'
+      );
+      process.exit(1);
+    }
     try {
-      const code = await sock.requestPairingCode(phoneNumber.replace(/[^0-9]/g, ''));
+      const code = await sock.requestPairingCode(PHONE_NUMBER.replace(/[^0-9]/g, ''));
       console.log('\n=================================');
       console.log(`  Your pairing code: ${code}`);
       console.log('=================================');
@@ -144,3 +161,4 @@ startBot().catch((err) => {
   console.error('[dp-bot] Fatal error:', err);
   process.exit(1);
 });
+

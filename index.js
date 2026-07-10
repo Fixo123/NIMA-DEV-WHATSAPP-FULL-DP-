@@ -7,43 +7,43 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static('public'));
 app.use(express.json());
 
-app.post('/generate', async (req, res) => {
-    try {
-        const { number, imageUrl } = req.body;
-        const { state, saveCreds } = await useMultiFileAuthState('./auth_info');
-        
-        const sock = makeWASocket({
-            auth: state,
-            logger: pino({ level: 'silent' }),
-            browser: Browsers.macOS('Chrome')
-        });
+// Main function to start socket
+async function startBot(number, imageUrl, res) {
+    const { state, saveCreds } = await useMultiFileAuthState('./auth_info');
+    
+    const sock = makeWASocket({
+        auth: state,
+        logger: pino({ level: 'silent' }),
+        browser: Browsers.macOS('Chrome')
+    });
 
+    if (!sock.authState.creds.registered) {
         const code = await sock.requestPairingCode(number.replace(/[^0-9]/g, ''));
-        
-        sock.ev.on('creds.update', saveCreds);
-
-        sock.ev.on('connection.update', async (update) => {
-            const { connection, lastDisconnect } = update;
-            if (connection === 'open') {
-                console.log("WhatsApp Connected!");
-                // DP එක Update කිරීම (සම්බන්ධ වූ වහාම)
-                try {
-                    await sock.updateProfilePicture(sock.user.id, { url: imageUrl });
-                    console.log("DP Updated successfully.");
-                } catch (e) {
-                    console.log("DP Update error:", e);
-                }
-            } else if (connection === 'close') {
-                if (lastDisconnect?.error?.output?.statusCode !== 401) {
-                    // නැවත සම්බන්ධ වීමට උත්සාහ කරන්න
-                }
-            }
-        });
-
         res.json({ code });
-    } catch (err) {
-        res.status(500).json({ error: "System Error" });
     }
+
+    sock.ev.on('creds.update', saveCreds);
+
+    sock.ev.on('connection.update', async (update) => {
+        const { connection } = update;
+        if (connection === 'open') {
+            console.log("Connected to WhatsApp!");
+            try {
+                // DP එක Update කිරීම
+                await sock.updateProfilePicture(sock.user.id, { url: imageUrl });
+                console.log("DP Updated Successfully.");
+            } catch (err) {
+                console.error("DP Update Failed:", err);
+            }
+        }
+    });
+}
+
+app.post('/generate', async (req, res) => {
+    const { number, imageUrl } = req.body;
+    if (!number || !imageUrl) return res.status(400).json({ error: "Details missing" });
+    
+    await startBot(number, imageUrl, res);
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

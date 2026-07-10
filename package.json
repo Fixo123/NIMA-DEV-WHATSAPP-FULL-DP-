@@ -4,6 +4,9 @@
   "description": "Auto-set WhatsApp profile picture on connect using official Baileys (own account only)",
   "main": "index.js",
   "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "start": "node index.js"
   },

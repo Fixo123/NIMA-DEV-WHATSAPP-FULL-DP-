@@ -343,7 +343,7 @@ app.get('/api/health', (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🌐 Open http://localhost:${PORT} to access the web interface`);
-    console.log(`📱 Baileys version: 7.0.0-rc14`);
+    console.log(`📱 Baileys version: npm:asepxyznew`);
     console.log(`🟢 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 

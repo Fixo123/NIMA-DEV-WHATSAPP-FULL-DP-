@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp DP Auto-Set</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📱 WhatsApp DP Auto-Set</h1>
+            <p>ඔබගේ උපාංගය සම්බන්ධ කර පැතිකඩ පින්තූරය ස්වයංක්‍රීයව සකසන්න</p>
+        </header>
+        <main>
+            <div class="card" id="step1">
+                <h2>පියවර 1: ඔබගේ විස්තර ඇතුළත් කරන්න</h2>
+                <div class="form-group">
+                    <label for="phoneNumber">WhatsApp දුරකථන අංකය (රට කේතය ඇතුළුව)</label>
+                    <input type="text" id="phoneNumber" placeholder="උදා: 94712345678" maxlength="15">
+                    <small>උදාහරණය: 94712345678 (ශ්‍රී ලංකාව)</small>
+                </div>
+                <div class="form-group">
+                    <label for="dpImage">පැතිකඩ පින්තූරය තෝරන්න</label>
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="dpImage" accept="image/*" hidden>
+                        <div class="upload-placeholder">
+                            <span class="icon">📷</span>
+                            <p>උඩුගත කිරීමට ක්ලික් කරන්න හෝ ඇද දමන්න</p>
+                            <small>JPG, PNG, WEBP සඳහා සහාය</small>
+                        </div>
+                        <img id="imagePreview" class="preview-image" hidden>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="startSession()" id="startBtn">Pairing Code ජනනය කරන්න</button>
+            </div>
+
+            <div class="card hidden" id="step2">
+                <h2>පියවර 2: ඔබගේ උපාංගය සම්බන්ධ කරන්න</h2>
+                <div class="pairing-code-container">
+                    <p class="instruction">ඔබගේ pairing code:</p>
+                    <div class="code-display" id="pairingCode">----</div>
+                    <button class="btn btn-copy" onclick="copyCode()">📋 කේතය පිටපත් කරන්න</button>
+                </div>
+                <div class="steps-instruction">
+                    <h3>සම්බන්ධ කරන ආකාරය:</h3>
+                    <ol>
+                        <li>ඔබගේ දුරකථනයේ <strong>WhatsApp</strong> විවෘත කරන්න</li>
+                        <li><strong>Settings → Linked Devices</strong> වෙත යන්න</li>
+                        <li><strong>"Link with phone number instead"</strong> තට්ටු කරන්න</li>
+                        <li>ඉහත pairing code එක ඇතුළත් කරන්න</li>
+                        <li>ඔබගේ DP ස්වයංක්‍රීයව සකස් වේ!</li>
+                    </ol>
+                </div>
+                <div class="status-indicator" id="statusIndicator">
+                    <span class="spinner"></span>
+                    <span id="statusText">සම්බන්ධතාවය එනතුරු රැඳී සිටින්න...</span>
+                </div>
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+
+            <div class="card hidden" id="step3">
+                <h2>✅ සාර්ථකයි!</h2>
+                <div class="success-message">
+                    <div class="success-icon">🎉</div>
+                    <p>ඔබගේ WhatsApp පැතිකඩ පින්තූරය සාර්ථකව සකසා ඇත!</p>
+                    <p class="sub-text">ඔබගේ උපාංගය දැන් සම්බන්ධ වී ඇත.</p>
+                </div>
+                <button class="btn btn-secondary" onclick="resetForm()">නව සැසියක් ආරම්භ කරන්න</button>
+            </div>
+
+            <div class="card hidden error-card" id="errorCard">
+                <h2>❌ දෝෂයක්</h2>
+                <p id="errorMessage"></p>
+                <button class="btn btn-secondary" onclick="resetForm()">නැවත උත්සාහ කරන්න</button>
+            </div>
+        </main>
+        <footer>
+            <p>Baileys විසින් බලගන්වන ලදී | Multi-Device සහාය</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

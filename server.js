@@ -2,55 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const fs = require('fs-extra');
 const path = require('path');
-
-// Baileys - Dynamic import with detailed inspection
-let makeWASocket, DisconnectReason, useMultiFileAuthState, fetchLatestBaileysVersion;
-
-try {
-  const baileys = require('baileys');
-  console.log('🔍 Baileys loaded, inspecting exports...');
-  console.log('📦 Exports keys:', Object.keys(baileys));
-  
-  let baileysModule = baileys;
-  if (baileys.default && typeof baileys.default === 'object') {
-    baileysModule = baileys.default;
-    console.log('📦 Using default export');
-  }
-  
-  makeWASocket = baileysModule.makeWASocket || baileys.makeWASocket;
-  DisconnectReason = baileysModule.DisconnectReason || baileys.DisconnectReason;
-  useMultiFileAuthState = baileysModule.useMultiFileAuthState || baileys.useMultiFileAuthState;
-  fetchLatestBaileysVersion = baileysModule.fetchLatestBaileysVersion || baileys.fetchLatestBaileysVersion;
-  
-  if (!makeWASocket && baileys.default) {
-    const nested = baileys.default;
-    makeWASocket = nested.makeWASocket;
-    DisconnectReason = nested.DisconnectReason;
-    useMultiFileAuthState = nested.useMultiFileAuthState;
-    fetchLatestBaileysVersion = nested.fetchLatestBaileysVersion;
-  }
-  
-  if (makeWASocket) {
-    console.log('✅ Baileys loaded successfully from custom fork');
-  } else {
-    throw new Error('Could not find makeWASocket');
-  }
-} catch (err) {
-  console.log('⚠️ Custom fork error:', err.message);
-  console.log('🔄 Trying fallback to @whiskeysockets/baileys...');
-  try {
-    const baileys = require('@whiskeysockets/baileys');
-    makeWASocket = baileys.makeWASocket;
-    DisconnectReason = baileys.DisconnectReason;
-    useMultiFileAuthState = baileys.useMultiFileAuthState;
-    fetchLatestBaileysVersion = baileys.fetchLatestBaileysVersion;
-    console.log('✅ Baileys loaded from @whiskeysockets/baileys (fallback)');
-  } catch (fallbackError) {
-    console.error('❌ Cannot load Baileys:', fallbackError.message);
-    process.exit(1);
-  }
-}
-
+const { makeWASocket, DisconnectReason, useMultiFileAuthState, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
 const QRCode = require('qrcode');
 const P = require('pino');
 const cors = require('cors');

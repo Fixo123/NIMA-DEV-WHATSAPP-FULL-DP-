@@ -16,8 +16,19 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
+// ✅ ශක්තිමත් CORS settings
+app.use(cors({
+    origin: '*', // සියලු domains වලින් allow කරන්න
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    credentials: true
+}));
+
+// ✅ Preflight requests handle කරන්න
+app.options('*', cors());
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
 const sessions = new Map();
@@ -33,7 +44,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
     storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
             cb(null, true);
@@ -155,9 +166,13 @@ async function setProfilePicture(sock, imagePath) {
 
 // API Routes
 app.post('/api/start-session', upload.single('dpImage'), async (req, res) => {
+    console.log('📨 POST /api/start-session received');
     try {
         const { phoneNumber } = req.body;
         const dpImage = req.file;
+
+        console.log(`📱 Phone: ${phoneNumber}`);
+        console.log(`🖼️ File: ${dpImage ? dpImage.originalname : 'None'}`);
 
         if (!phoneNumber) {
             return res.status(400).json({ success: false, error: 'දුරකථන අංකය අවශ්‍යයි' });
@@ -259,7 +274,16 @@ app.get('/api/sessions', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', timestamp: new Date().toISOString(), sessions: sessions.size });
+    res.json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(), 
+        sessions: sessions.size 
+    });
+});
+
+// Root route
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, () => {

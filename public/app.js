@@ -1,3 +1,6 @@
+// ✅ Auto-detect base URL
+const API_BASE = window.location.origin; // ඔටෝමැටික්ව Render URL එක ගන්නවා
+
 const step1 = document.getElementById('step1');
 const step2 = document.getElementById('step2');
 const step3 = document.getElementById('step3');
@@ -11,6 +14,8 @@ const startBtn = document.getElementById('startBtn');
 let currentSessionId = null;
 let statusCheckInterval = null;
 let currentQrCode = null;
+
+console.log(`🔗 API Base URL: ${API_BASE}`);
 
 uploadArea.addEventListener('click', () => fileInput.click());
 
@@ -71,19 +76,31 @@ async function startSession() {
         formData.append('phoneNumber', phoneNumber);
         if (dpImage) formData.append('dpImage', dpImage);
 
-        const response = await fetch('/api/start-session', {
+        console.log(`📤 Sending request to: ${API_BASE}/api/start-session`);
+
+        const response = await fetch(`${API_BASE}/api/start-session`, {
             method: 'POST',
             body: formData
         });
 
+        console.log(`📥 Response status: ${response.status}`);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Server response:', errorText);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
         const data = await response.json();
+        console.log('📦 Response data:', data);
+
         if (!data.success) throw new Error(data.error || 'සැසිය ආරම්භ කිරීම අසාර්ථකයි');
 
         currentSessionId = data.sessionId;
         step1.classList.add('hidden');
         step2.classList.remove('hidden');
 
-        // QR code එක display කරන්න
+        // QR code display
         if (data.qrCode) {
             currentQrCode = data.qrCode;
             let qrContainer = document.getElementById('qrContainer');
@@ -95,6 +112,7 @@ async function startSession() {
                 document.querySelector('.pairing-code-container').appendChild(qrContainer);
             }
             qrContainer.innerHTML = `<img src="${data.qrCode}" alt="QR Code" style="max-width: 250px; border-radius: 10px;">`;
+            document.getElementById('pairingCode').textContent = '📱 QR Code';
         }
 
         if (data.pairingCode) {
@@ -106,7 +124,8 @@ async function startSession() {
         startStatusCheck();
 
     } catch (error) {
-        showError(error.message);
+        console.error('❌ Start session error:', error);
+        showError(error.message || 'Failed to connect to server. Please check your internet connection.');
         startBtn.disabled = false;
         startBtn.textContent = 'Pairing Code ජනනය කරන්න';
     }
@@ -114,7 +133,22 @@ async function startSession() {
 
 function copyCode() {
     const code = document.getElementById('pairingCode').textContent;
+    if (code === '----' || code === '📱 QR Code') {
+        showError('කිසිදු කේතයක් නොමැත');
+        return;
+    }
     navigator.clipboard.writeText(code).then(() => {
+        const btn = document.querySelector('.btn-copy');
+        btn.textContent = '✅ පිටපත් කරන ලදී!';
+        setTimeout(() => btn.textContent = '📋 කේතය පිටපත් කරන්න', 2000);
+    }).catch(() => {
+        // Fallback
+        const textArea = document.createElement('textarea');
+        textArea.value = code;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
         const btn = document.querySelector('.btn-copy');
         btn.textContent = '✅ පිටපත් කරන ලදී!';
         setTimeout(() => btn.textContent = '📋 කේතය පිටපත් කරන්න', 2000);
@@ -122,9 +156,12 @@ function copyCode() {
 }
 
 function startStatusCheck() {
+    if (statusCheckInterval) clearInterval(statusCheckInterval);
+    
     statusCheckInterval = setInterval(async () => {
         try {
-            const response = await fetch(`/api/session-status/${currentSessionId}`);
+            const response = await fetch(`${API_BASE}/api/session-status/${currentSessionId}`);
+            if (!response.ok) throw new Error('Status check failed');
             const data = await response.json();
 
             updateStatus(data.status, data.message);
@@ -140,9 +177,10 @@ function startStatusCheck() {
                     document.querySelector('.pairing-code-container').appendChild(qrContainer);
                 }
                 qrContainer.innerHTML = `<img src="${data.qrCode}" alt="QR Code" style="max-width: 250px; border-radius: 10px;">`;
+                document.getElementById('pairingCode').textContent = '📱 QR Code';
             }
 
-            if (data.pairingCode && document.getElementById('pairingCode').textContent === '----') {
+            if (data.pairingCode && document.getElementById('pairingCode').textContent !== data.pairingCode) {
                 document.getElementById('pairingCode').textContent = data.pairingCode;
                 const qrContainer = document.getElementById('qrContainer');
                 if (qrContainer) qrContainer.innerHTML = '';
@@ -150,12 +188,14 @@ function startStatusCheck() {
 
             if (data.status === 'connected' || data.status === 'dp_set') {
                 clearInterval(statusCheckInterval);
+                statusCheckInterval = null;
                 setTimeout(() => {
                     step2.classList.add('hidden');
                     step3.classList.remove('hidden');
                 }, 1000);
             } else if (data.status === 'disconnected' || data.status === 'dp_failed') {
                 clearInterval(statusCheckInterval);
+                statusCheckInterval = null;
                 showError(data.message || 'සම්බන්ධතාවය අසාර්ථකයි');
             }
 
@@ -172,9 +212,10 @@ function updateStatus(status, message) {
         'pairing': 'Pairing code ඇතුළත් කිරීමට රැඳී සිටින්න...',
         'qr': 'QR code එක scan කරන්න',
         'connected': 'සම්බන්ධ විය! DP සකසමින්...',
-        'dp_set': 'DP සාර්ථකයි!',
-        'disconnected': 'විසන්ධි විය',
-        'dp_failed': 'DP සැකසීම අසාර්ථකයි'
+        'dp_set': '✅ DP සාර්ථකයි!',
+        'disconnected': '❌ විසන්ධි විය',
+        'dp_failed': '❌ DP සැකසීම අසාර්ථකයි',
+        'error': '❌ දෝෂයක්'
     };
     statusText.textContent = message || statusMap[status] || status;
 }
@@ -184,11 +225,14 @@ function showError(message) {
     step2.classList.add('hidden');
     step3.classList.add('hidden');
     errorCard.classList.remove('hidden');
-    document.getElementById('errorMessage').textContent = message;
+    document.getElementById('errorMessage').textContent = message || 'Unknown error occurred';
 }
 
 function resetForm() {
-    if (statusCheckInterval) clearInterval(statusCheckInterval);
+    if (statusCheckInterval) {
+        clearInterval(statusCheckInterval);
+        statusCheckInterval = null;
+    }
 
     phoneInput.value = '';
     fileInput.value = '';

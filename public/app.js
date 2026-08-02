@@ -10,6 +10,7 @@ const startBtn = document.getElementById('startBtn');
 
 let currentSessionId = null;
 let statusCheckInterval = null;
+let currentQrCode = null;
 
 uploadArea.addEventListener('click', () => fileInput.click());
 
@@ -82,8 +83,24 @@ async function startSession() {
         step1.classList.add('hidden');
         step2.classList.remove('hidden');
 
+        // QR code එක display කරන්න
+        if (data.qrCode) {
+            currentQrCode = data.qrCode;
+            let qrContainer = document.getElementById('qrContainer');
+            if (!qrContainer) {
+                qrContainer = document.createElement('div');
+                qrContainer.id = 'qrContainer';
+                qrContainer.style.textAlign = 'center';
+                qrContainer.style.margin = '20px 0';
+                document.querySelector('.pairing-code-container').appendChild(qrContainer);
+            }
+            qrContainer.innerHTML = `<img src="${data.qrCode}" alt="QR Code" style="max-width: 250px; border-radius: 10px;">`;
+        }
+
         if (data.pairingCode) {
             document.getElementById('pairingCode').textContent = data.pairingCode;
+            const qrContainer = document.getElementById('qrContainer');
+            if (qrContainer) qrContainer.innerHTML = '';
         }
 
         startStatusCheck();
@@ -112,6 +129,25 @@ function startStatusCheck() {
 
             updateStatus(data.status, data.message);
 
+            if (data.qrCode && data.status === 'qr') {
+                currentQrCode = data.qrCode;
+                let qrContainer = document.getElementById('qrContainer');
+                if (!qrContainer) {
+                    qrContainer = document.createElement('div');
+                    qrContainer.id = 'qrContainer';
+                    qrContainer.style.textAlign = 'center';
+                    qrContainer.style.margin = '20px 0';
+                    document.querySelector('.pairing-code-container').appendChild(qrContainer);
+                }
+                qrContainer.innerHTML = `<img src="${data.qrCode}" alt="QR Code" style="max-width: 250px; border-radius: 10px;">`;
+            }
+
+            if (data.pairingCode && document.getElementById('pairingCode').textContent === '----') {
+                document.getElementById('pairingCode').textContent = data.pairingCode;
+                const qrContainer = document.getElementById('qrContainer');
+                if (qrContainer) qrContainer.innerHTML = '';
+            }
+
             if (data.status === 'connected' || data.status === 'dp_set') {
                 clearInterval(statusCheckInterval);
                 setTimeout(() => {
@@ -121,10 +157,6 @@ function startStatusCheck() {
             } else if (data.status === 'disconnected' || data.status === 'dp_failed') {
                 clearInterval(statusCheckInterval);
                 showError(data.message || 'සම්බන්ධතාවය අසාර්ථකයි');
-            }
-
-            if (data.pairingCode && document.getElementById('pairingCode').textContent === '----') {
-                document.getElementById('pairingCode').textContent = data.pairingCode;
             }
 
         } catch (error) {
@@ -138,9 +170,9 @@ function updateStatus(status, message) {
     const statusMap = {
         'connecting': 'WhatsApp වෙත සම්බන්ධ වෙමින්...',
         'pairing': 'Pairing code ඇතුළත් කිරීමට රැඳී සිටින්න...',
-        'qr': 'QR කේතය scan කරන්න (විකල්ප)...',
+        'qr': 'QR code එක scan කරන්න',
         'connected': 'සම්බන්ධ විය! DP සකසමින්...',
-        'dp_set': 'පැතිකඩ පින්තූරය සකසා ඇත!',
+        'dp_set': 'DP සාර්ථකයි!',
         'disconnected': 'විසන්ධි විය',
         'dp_failed': 'DP සැකසීම අසාර්ථකයි'
     };
@@ -173,6 +205,10 @@ function resetForm() {
     startBtn.disabled = false;
     startBtn.textContent = 'Pairing Code ජනනය කරන්න';
     document.getElementById('pairingCode').textContent = '----';
+
+    const qrContainer = document.getElementById('qrContainer');
+    if (qrContainer) qrContainer.innerHTML = '';
+    currentQrCode = null;
 
     currentSessionId = null;
 }

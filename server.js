@@ -2,7 +2,32 @@ const express = require('express');
 const multer = require('multer');
 const fs = require('fs-extra');
 const path = require('path');
-const { makeWASocket, DisconnectReason, useMultiFileAuthState, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
+
+// Baileys - Custom fork support
+let makeWASocket, DisconnectReason, useMultiFileAuthState, fetchLatestBaileysVersion;
+
+try {
+  const baileys = require('baileys');
+  makeWASocket = baileys.default?.makeWASocket || baileys.makeWASocket;
+  DisconnectReason = baileys.DisconnectReason;
+  useMultiFileAuthState = baileys.useMultiFileAuthState;
+  fetchLatestBaileysVersion = baileys.fetchLatestBaileysVersion;
+  console.log('✅ Baileys loaded from custom fork');
+} catch (err) {
+  console.log('⚠️ Custom fork not found, trying fallback...');
+  try {
+    const baileys = require('@whiskeysockets/baileys');
+    makeWASocket = baileys.makeWASocket;
+    DisconnectReason = baileys.DisconnectReason;
+    useMultiFileAuthState = baileys.useMultiFileAuthState;
+    fetchLatestBaileysVersion = baileys.fetchLatestBaileysVersion;
+    console.log('✅ Baileys loaded from @whiskeysockets/baileys (fallback)');
+  } catch (fallbackError) {
+    console.error('❌ Cannot load Baileys:', fallbackError.message);
+    process.exit(1);
+  }
+}
+
 const QRCode = require('qrcode');
 const P = require('pino');
 const cors = require('cors');

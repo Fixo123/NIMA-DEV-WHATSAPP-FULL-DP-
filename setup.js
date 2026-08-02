@@ -15,7 +15,7 @@ const files = {
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^7.0.0-rc13",
+    "baileys": "github:kinggggg444/natsu-baileys-v10",
     "express": "^5.2.1",
     "multer": "^1.4.5-lts.1",
     "qrcode": "^1.5.4",

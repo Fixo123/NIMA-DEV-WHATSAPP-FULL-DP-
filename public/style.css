@@ -1,0 +1,304 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #1c1e21;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    padding: 40px 0;
+    color: white;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.card h2 {
+    margin-bottom: 20px;
+    color: #128C7E;
+    font-size: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #dddfe2;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #25D366;
+}
+
+small {
+    display: block;
+    margin-top: 6px;
+    color: #65676b;
+    font-size: 0.85rem;
+}
+
+.upload-area {
+    border: 3px dashed #dddfe2;
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-area:hover {
+    border-color: #25D366;
+    background: rgba(37, 211, 102, 0.05);
+}
+
+.upload-area.has-image {
+    padding: 10px;
+    border-style: solid;
+    border-color: #25D366;
+}
+
+.upload-placeholder {
+    pointer-events: none;
+}
+
+.upload-placeholder .icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.preview-image {
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: #25D366;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #128C7E;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(37, 211, 102, 0.4);
+}
+
+.btn-secondary {
+    background: #65676b;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #1c1e21;
+}
+
+.btn-copy {
+    background: #34B7F1;
+    color: white;
+    width: auto;
+    padding: 10px 20px;
+    margin-top: 10px;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.pairing-code-container {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.instruction {
+    color: #65676b;
+    margin-bottom: 10px;
+}
+
+.code-display {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #128C7E;
+    letter-spacing: 8px;
+    background: #f0f0f0;
+    padding: 20px;
+    border-radius: 12px;
+    font-family: 'Courier New', monospace;
+}
+
+.steps-instruction {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.steps-instruction h3 {
+    margin-bottom: 15px;
+}
+
+.steps-instruction ol {
+    padding-left: 20px;
+}
+
+.steps-instruction li {
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px;
+    color: #65676b;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid #dddfe2;
+    border-top-color: #25D366;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.progress-bar {
+    height: 6px;
+    background: #dddfe2;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #25D366;
+    width: 0%;
+    transition: width 0.5s;
+    animation: progress 2s ease-in-out infinite;
+}
+
+@keyframes progress {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+}
+
+.success-message {
+    text-align: center;
+    padding: 30px;
+}
+
+.success-icon {
+    font-size: 5rem;
+    margin-bottom: 20px;
+}
+
+.success-message p {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.sub-text {
+    color: #65676b;
+}
+
+.error-card {
+    border-left: 4px solid #ff4444;
+}
+
+.error-card h2 {
+    color: #ff4444;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    color: rgba(255,255,255,0.8);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 1.8rem;
+    }
+    .code-display {
+        font-size: 2rem;
+        letter-spacing: 4px;
+    }
+    .card {
+        padding: 20px;
+    }
+  }

@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: whatsapp-dp-bot
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: NODE_ENV
+        value: production
